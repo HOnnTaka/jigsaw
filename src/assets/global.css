@@ -1,0 +1,18 @@
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'hmSans', sans-serif;
+  text-shadow: 0 0 2px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+@font-face {
+  font-family: 'hmSans';
+  src: url('./HarmonyOS_Sans_Regular.ttf');
+}
+body{
+  overflow: hidden;
+  background: rgba(241, 248, 255, 0.6);
+}
+
