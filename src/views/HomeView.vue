@@ -117,6 +117,7 @@ const loadImages = async () => {
       const dataURL = await loadImage(img);
       processedImages.push(dataURL);
     } catch (error) {
+      alert("加载失败，请重试:" + error);
       console.error("Failed to load image:", img, error);
     }
   }
@@ -198,6 +199,10 @@ const uploadImage = async () => {
       // emit("imageChange", dataURL);
       router.push({ name: "game" });
     };
+  };
+  input.onerror = e => {
+    alert("上传失败，请重试：" + e);
+    console.error("上传失败，请重试：" + e);
   };
   input.onclick = () => {
     clearTimer();
