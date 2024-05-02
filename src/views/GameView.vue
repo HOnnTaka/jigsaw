@@ -48,7 +48,7 @@ const piecesRef = ref();
 const saveContainer = ref();
 
 const initialPieces = [];
-const piecesIsCurrect = ref([]);
+const pieceAreCurrected = ref([]);
 for (let i = 0; i < 4; i++) {
   for (let j = 0; j < 4; j++) {
     const piece = Object.freeze({
@@ -57,7 +57,7 @@ for (let i = 0; i < 4; i++) {
       y: i,
     });
     initialPieces.push(piece);
-    piecesIsCurrect.value.push({ id: i * 4 + j, isCurrect: false });
+    pieceAreCurrected.value.push({ id: i * 4 + j, isCurrect: false });
   }
 }
 
@@ -90,15 +90,31 @@ const shuffle = () => {
   const endLeft = startLeft + saveContainer.value.offsetWidth - pieceSize - 20;
   //   console.log(startTop, startLeft, endTop, endLeft);
   piecesRef.value.forEach(piece => {
-    piece.classList.add("out");
-    piece.classList.add("transition");
-    const randomY = Math.floor(Math.random() * (endTop - startTop) + startTop);
-    const randomX = Math.floor(Math.random() * (endLeft - startLeft) + startLeft);
-    piece.style.left = `${randomX}px`;
-    piece.style.top = `${randomY}px `;
-    setTimeout(() => piece.classList.remove("transition"), 500);
+    // console.log(pieceAreCurrected.value.find(v => v.id == piece.getAttribute("data-id")).isCurrect);
+    if (
+      !pieceAreCurrected.value.find(v => v.id == piece.getAttribute("data-id"))
+        .isCurrect
+    ) {
+      piece.classList.add("out");
+      piece.classList.add("transition");
+      const randomY = Math.floor(
+        Math.random() * (endTop - startTop) + startTop
+      );
+      const randomX = Math.floor(
+        Math.random() * (endLeft - startLeft) + startLeft
+      );
+      piece.style.left = `${randomX}px`;
+      piece.style.top = `${randomY}px `;
+      setTimeout(() => piece.classList.remove("transition"), 500);
+    }
   });
 };
+
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => shuffle(), 500);
+});
 
 onMounted(() => {
   emit("imageChange", croppedImage.value);
@@ -117,7 +133,8 @@ const onPieceTouchStart = event => {
   event.preventDefault();
   currentPiece = event.target;
   currentId = currentPiece.getAttribute("data-id");
-  if (piecesIsCurrect.value.find(piece => piece.id == currentId).isCurrect) return;
+  if (pieceAreCurrected.value.find(piece => piece.id == currentId).isCurrect)
+    return;
   currentPiece.style.zIndex = zIndex++;
   currentPiece.classList.add("active");
   startX = (event.touches ? event.touches[0] : event).clientX;
@@ -129,14 +146,25 @@ const onPieceTouchStart = event => {
 const onPieceTouchMove = event => {
   event.preventDefault();
   if (!currentPiece) return;
-  if (piecesIsCurrect.value.find(piece => piece.id == currentId).isCurrect) return;
-  const newLeft = startLeft + (event.touches ? event.touches[0] : event).clientX - startX;
-  const newTop = startTop + (event.touches ? event.touches[0] : event).clientY - startY;
+  if (pieceAreCurrected.value.find(piece => piece.id == currentId).isCurrect)
+    return;
+  const newLeft =
+    startLeft + (event.touches ? event.touches[0] : event).clientX - startX;
+  const newTop =
+    startTop + (event.touches ? event.touches[0] : event).clientY - startY;
   currentPiece.style.left = `${
-    newLeft <= -20 ? -20 : newLeft >= window.innerWidth - currentPiece.offsetWidth ? window.innerWidth - currentPiece.offsetWidth : newLeft
+    newLeft <= -20
+      ? -20
+      : newLeft >= window.innerWidth - currentPiece.offsetWidth
+      ? window.innerWidth - currentPiece.offsetWidth
+      : newLeft
   }px`;
   currentPiece.style.top = `${
-    newTop <= -25 ? -25 : newTop >= window.innerHeight - currentPiece.offsetHeight - 10 ? window.innerHeight - currentPiece.offsetHeight - 10 : newTop
+    newTop <= -25
+      ? -25
+      : newTop >= window.innerHeight - currentPiece.offsetHeight - 10
+      ? window.innerHeight - currentPiece.offsetHeight - 10
+      : newTop
   }px`;
   const originSize = jigsawContainer.value.offsetWidth / 4;
   const { x, y } = pieces.value.find(piece => piece.id == currentId);
@@ -144,10 +172,19 @@ const onPieceTouchMove = event => {
   const rangeY = [y * originSize, (y + 1) * originSize];
 
   // console.log(event.touches[0].clientX, event.touches[0].clientY);
-  const clientX = (event.touches ? event.touches[0] : event).clientX - jigsawContainer.value.offsetLeft;
-  const clientY = (event.touches ? event.touches[0] : event).clientY - jigsawContainer.value.offsetTop;
+  const clientX =
+    (event.touches ? event.touches[0] : event).clientX -
+    jigsawContainer.value.offsetLeft;
+  const clientY =
+    (event.touches ? event.touches[0] : event).clientY -
+    jigsawContainer.value.offsetTop;
   // 判断是否在拼图范围内
-  if (clientX >= rangeX[0] && clientX <= rangeX[1] && clientY >= rangeY[0] && clientY <= rangeY[1]) {
+  if (
+    clientX >= rangeX[0] &&
+    clientX <= rangeX[1] &&
+    clientY >= rangeY[0] &&
+    clientY <= rangeY[1]
+  ) {
     currentPiece.classList.remove("out");
     isCorrect = true;
   } else {
@@ -159,7 +196,9 @@ const onPieceTouchMove = event => {
 const onPieceTouchEnd = () => {
   currentPiece.classList.remove("active");
   if (isCorrect) {
-    const pieceisCurrect = piecesIsCurrect.value.find(piece => piece.id == currentId);
+    const pieceisCurrect = pieceAreCurrected.value.find(
+      piece => piece.id == currentId
+    );
     const piece = pieces.value.find(piece => piece.id == currentId);
     pieceisCurrect.isCurrect = true;
     currentPiece.classList.remove("out");
@@ -167,7 +206,7 @@ const onPieceTouchEnd = () => {
     currentPiece.style.top = `calc(${piece.y} * calc(90vmin / 4))`;
     currentPiece.style.left = `calc(${piece.x} * calc(90vmin / 4))`;
     currentPiece.style.zIndex = 1;
-    if (piecesIsCurrect.value.every(piece => piece.isCurrect)) {
+    if (pieceAreCurrected.value.every(piece => piece.isCurrect)) {
       count.value = "完成！";
       setTimeout(() => {
         count.value = "hide";
@@ -211,7 +250,7 @@ onBeforeUnmount(() => {
 .game-view > div {
   border-radius: 10px;
   box-shadow: 0px 0px 10px #657b9633;
-  background: #5a758d33;
+  background: #a5b9ca4f;
 }
 .jigsaw-container {
   height: 90vmin;
@@ -232,7 +271,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 .jigsaw-containerBorder div {
-  border: 1px dashed rgba(109, 118, 138, 0.5);
+  border: 1px dashed rgba(109, 118, 138, 0.6);
   width: calc(90vmin / 4);
   height: calc(90vmin / 4);
 }
@@ -257,6 +296,7 @@ onBeforeUnmount(() => {
 .save-container {
   height: 90vmin;
   width: calc(100vw - 90vmin - 6vmin);
+  outline: 1px dashed rgba(109, 118, 138, 0.6);
 }
 
 .piece {
@@ -269,7 +309,6 @@ onBeforeUnmount(() => {
   background-size: 90vmin 90vmin;
   background-repeat: no-repeat;
   outline: 1px solid #ffffff33;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
 }
 .piece.transition {
   transition: all 0.5s ease;
@@ -280,6 +319,7 @@ onBeforeUnmount(() => {
 }
 .piece.out {
   transform: scale(0.8);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
 }
 .fade-enter-active,
 .fade-leave-active {
@@ -289,7 +329,8 @@ onBeforeUnmount(() => {
 .fade-leave-to {
   opacity: 0;
 }
-@media screen and (max-width: 768px) {
+/* 竖屏 */
+@media screen and (orientation: portrait) {
   .game-view {
     flex-direction: column;
     padding-top: 5vmin;

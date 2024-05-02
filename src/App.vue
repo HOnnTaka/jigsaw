@@ -36,7 +36,10 @@ const onImageChange = url => {
         }"
       ></div>
     </div>
-    <div class="background2" :style="{ backgroundImage: `url(${bgUrl})`, opacity: hide ? 0 : 1 }"></div>
+    <div
+      class="background2"
+      :style="{ backgroundImage: `url(${bgUrl})`, opacity: hide ? 0 : 1 }"
+    ></div>
     <div class="app-main">
       <router-view v-slot="{ Component }">
         <transition name="animate" mode="out-in">
@@ -47,7 +50,12 @@ const onImageChange = url => {
     <div class="app-footer">
       <RouterLink style="flex: 1" to="/" replace>返回首页</RouterLink>
       <p style="flex: 1; text-align: center">21级马裕博</p>
-      <a style="flex: 1; text-align: right" href="https://github.com/HOnnTaka/jigsaw/tree/gh-pages" target="_blank">github</a>
+      <a
+        style="flex: 1; text-align: right"
+        href="https://github.com/HOnnTaka/jigsaw/tree/gh-pages"
+        target="_blank"
+        >github</a
+      >
     </div>
   </div>
 </template>
@@ -63,9 +71,10 @@ const onImageChange = url => {
   pointer-events: none;
 }
 .background2 {
-  transition: all 0.5s;
+  transition: background 0.5s;
   filter: blur(7px) opacity(0.4);
   background-size: cover;
+  background-position: center;
   position: fixed;
   pointer-events: none;
   inset: 0;
