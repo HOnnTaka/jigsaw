@@ -2,14 +2,40 @@
   <div id="home">
     <div class="loading" v-if="hide">{{ loadingText }}</div>
     <!-- 关卡容器居中轮播 -->
-    <transition-group @mousemove="clearTimer" @mouseleave="startTimer" name="move" tag="div" class="container" :class="{ hide: hide }">
-      <div class="item" v-for="(img, index) in images" :key="img" @click="starGame(index)">
+    <transition-group
+      @mousemove="clearTimer"
+      @mouseleave="startTimer"
+      name="move"
+      tag="div"
+      class="container"
+      :class="{ hide: hide }"
+    >
+      <div
+        class="item"
+        v-for="(img, index) in images"
+        :key="img"
+        @click="starGame(index)"
+      >
         <img :src="img" alt="" @load="imageLoaded(index)" />
       </div>
     </transition-group>
     <div class="btnBox" v-if="!hide" :class="{ hide: hide }">
-      <div class="lt" @mousemove="clearTimer" @mouseleave="startTimer" @click="prevImg">&lt;</div>
-      <div class="rt" @mousemove="clearTimer" @mouseleave="startTimer" @click="nextImg">&gt;</div>
+      <div
+        class="lt"
+        @mousemove="clearTimer"
+        @mouseleave="startTimer"
+        @click="prevImg"
+      >
+        &lt;
+      </div>
+      <div
+        class="rt"
+        @mousemove="clearTimer"
+        @mouseleave="startTimer"
+        @click="nextImg"
+      >
+        &gt;
+      </div>
     </div>
     <div class="hint">
       <span>点击图片开始游戏 OR </span>
@@ -20,7 +46,14 @@
 
 <script setup>
 import { useRouter } from "vue-router";
-import { ref, onMounted, watch, onBeforeUnmount,computed,defineEmits } from "vue";
+import {
+  ref,
+  onMounted,
+  watch,
+  onBeforeUnmount,
+  computed,
+  defineEmits,
+} from "vue";
 
 const router = useRouter();
 const images = ref([]);
@@ -34,7 +67,11 @@ const loadCount = ref(0);
 const hide = ref(true);
 
 const loadingText = computed(() => {
-  return "加载默认图片中..." + Math.floor((loadCount.value / originImages.length) * 100) + "%";
+  return (
+    "加载默认图片中..." +
+    Math.floor((loadCount.value / originImages.length) * 100) +
+    "%"
+  );
 });
 
 const emit = defineEmits(["imageChange"]);
@@ -112,12 +149,27 @@ const startTimer = () => {
   }
 };
 
+const looping = ref(false);
 const nextImg = () => {
+  if (looping.value) {
+    return;
+  }
+  looping.value = true;
+  setTimeout(() => {
+    looping.value = false;
+  }, 500);
   const newImages = [...images.value];
   newImages.push(newImages.shift());
   images.value = newImages;
 };
 const prevImg = () => {
+  if (looping.value) {
+    return;
+  }
+  looping.value = true;
+  setTimeout(() => {
+    looping.value = false;
+  }, 500);
   const newImages = [...images.value];
   newImages.unshift(newImages.pop());
   images.value = newImages;
