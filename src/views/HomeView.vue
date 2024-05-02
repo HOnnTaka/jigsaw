@@ -42,7 +42,7 @@
     </div>
     <div class="hint">
       <span>点击图片开始游戏 OR </span>
-      <span @click="uploadImage">上传图片</span>
+      <span @click="uploadImage">本地图片</span>
     </div>
   </div>
 </template>
@@ -65,7 +65,10 @@ import img5 from "@/assets/images/img5.jpg";
 import img2 from "@/assets/images/img2.jpg";
 import img3 from "@/assets/images/img3.jpg";
 import img4 from "@/assets/images/img4.jpg";
-const originImages = [img1, img5, img2, img3, img4];
+import img6 from "@/assets/images/img6.jpg";
+import img7 from "@/assets/images/img7.jpg";
+
+const originImages = [img1, img5, img2, img3, img4, img6, img7];
 const loadCount = ref(0);
 const hide = ref(true);
 
@@ -90,20 +93,18 @@ const loadImage = async img => {
     const ctx = canvas.getContext("2d");
     const imgObj = new Image();
     imgObj.src = img;
+    const targetSize = 1000;
     imgObj.onload = function () {
-      const width = imgObj.width;
-      const height = imgObj.height;
-      const min = Math.min(width, height);
-      // 居中裁剪为正方形
-      canvas.width = min;
-      canvas.height = min;
-      if (width > height) {
-        ctx.drawImage(imgObj, (width - min) / 2, 0, min, min, 0, 0, min, min);
-      } else {
-        ctx.drawImage(imgObj, 0, (height - min) / 2, min, min, 0, 0, min, min);
-      }
-      //    处理图片压缩
-      const quality = 0.1;
+      let minSize = Math.min(imgObj.width, imgObj.height);
+      canvas.width = targetSize;
+      canvas.height = targetSize;
+
+      let offsetX = (imgObj.width - minSize) / 2;
+      let offsetY = (imgObj.height - minSize) / 2;
+
+      ctx.drawImage(imgObj, offsetX, offsetY, minSize, minSize, 0, 0, targetSize, targetSize);
+
+      const quality = 0.7;
       const base64 = canvas.toDataURL("image/jpeg", quality);
       resolve(base64);
     };
@@ -243,7 +244,6 @@ const uploadImage = async () => {
 
 onBeforeUnmount(() => {
   clearTimer();
-  emit("imageChange", null);
 });
 </script>
 

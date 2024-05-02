@@ -218,9 +218,6 @@ const onPieceTouchEnd = () => {
   isCorrect = false;
 };
 
-onBeforeUnmount(() => {
-  emit("imageChange", null);
-});
 </script>
 
 <style scoped>
@@ -236,6 +233,10 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: visible;
+  text-align: center;
 }
 .game-view {
   position: relative;
