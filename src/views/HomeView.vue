@@ -3,8 +3,11 @@
     <div class="loading" v-if="hide">{{ loadingText }}</div>
     <!-- 关卡容器居中轮播 -->
     <transition-group
-      @mousemove="clearTimer"
+      @mouseenter="clearTimer"
       @mouseleave="startTimer"
+      @touchstart="handleTouchstart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
       name="move"
       tag="div"
       class="container"
@@ -115,13 +118,13 @@ const loadImages = async () => {
   for (const img of originImages) {
     try {
       const dataURL = await loadImage(img);
-      processedImages.push(dataURL);
+      images.value.push(dataURL);
     } catch (error) {
       alert("加载失败，请重试:" + error);
       console.error("Failed to load image:", img, error);
     }
   }
-  images.value = processedImages;
+  // images.value = processedImages;
 };
 
 onMounted(async () => {
@@ -139,6 +142,7 @@ const imageLoaded = index => {
   }
 };
 
+// 轮播
 const timer = ref(null);
 const clearTimer = () => {
   clearInterval(timer.value);
@@ -150,6 +154,7 @@ const startTimer = () => {
   }
 };
 
+// 节流
 const looping = ref(false);
 const nextImg = () => {
   if (looping.value) {
@@ -175,30 +180,53 @@ const prevImg = () => {
   newImages.unshift(newImages.pop());
   images.value = newImages;
 };
+// 移动端拖动
+const handleTouchstart = e => {
+  clearTimer();
+};
+const handleTouchMove = e => {
+  clearTimer();
+};
+const handleTouchEnd = e => {
+  const { clientX, clientY } = e.changedTouches[0];
+  const { left, right, top, bottom } = e.target.getBoundingClientRect();
+  if (clientX < left + 100) {
+    nextImg();
+  } else if (clientX > right - 100) {
+    prevImg();
+  }
+};
+
+// 单击图片
 const starGame = index => {
   localStorage.setItem("currentImg", images.value[index]);
   router.push({ name: "game" });
 };
 
+// 上传图片
 const uploadImage = async () => {
-  // 上传图片逻辑
-  //   打开文件选择框
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
   input.onchange = async () => {
     clearTimer();
     const file = input.files[0];
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      const originBase64 = reader.result;
-      //   对图片进行裁剪
-      const dataURL = await loadImage(originBase64);
-      await localStorage.setItem("currentImg", dataURL);
-      // emit("imageChange", dataURL);
-      router.push({ name: "game" });
-    };
+    if (file.type.indexOf("image") === -1) {
+      alert("请选择图片文件");
+      return;
+    }
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const originBase64 = reader.result;
+        //   对图片进行裁剪
+        const dataURL = await loadImage(originBase64);
+        await localStorage.setItem("currentImg", dataURL);
+        // emit("imageChange", dataURL);
+        router.push({ name: "game" });
+      };
+    }
   };
   input.onerror = e => {
     alert("上传失败，请重试：" + e);
@@ -323,6 +351,7 @@ onBeforeUnmount(() => {
   transition: all 0.3s ease-in-out;
   user-select: none;
   pointer-events: all;
+  -webkit-user-select: none;
 }
 .btnBox .lt:hover,
 .btnBox .rt:hover {
