@@ -20,7 +20,7 @@
 
 <script setup>
 import { useRouter } from "vue-router";
-import { ref, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, onMounted, watch, onBeforeUnmount,computed,defineEmits } from "vue";
 
 const router = useRouter();
 const images = ref([]);
@@ -33,11 +33,9 @@ const originImages = [img1, img5, img2, img3, img4];
 const loadCount = ref(0);
 const hide = ref(true);
 
-const loadingText = ref("加载默认图片中...0%");
-const LoadingTimer = setInterval(() => {
-  loadingText.value = "加载默认图片中..." + Math.floor((loadCount.value / originImages.length) * 100) + "%";
-  if (!hide.value) clearInterval(LoadingTimer);
-}, 33);
+const loadingText = computed(() => {
+  return "加载默认图片中..." + Math.floor((loadCount.value / originImages.length) * 100) + "%";
+});
 
 const emit = defineEmits(["imageChange"]);
 watch(images, () => {
