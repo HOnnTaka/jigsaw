@@ -36,11 +36,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, defineEmits, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
 
 const croppedImage = ref(localStorage.getItem("currentImg"));
+const emit = defineEmits(["imageChange"]);
+if (!croppedImage.value) router.replace({ name: "home" });
 const jigsawContainer = ref();
 const piecesRef = ref();
 const saveContainer = ref();
@@ -99,6 +101,7 @@ const shuffle = () => {
 };
 
 onMounted(() => {
+  emit("imageChange", croppedImage.value);
   countDown();
 });
 
@@ -175,6 +178,10 @@ const onPieceTouchEnd = () => {
   currentPiece = null;
   isCorrect = false;
 };
+
+onBeforeUnmount(() => {
+  emit("imageChange", null);
+});
 </script>
 
 <style scoped>
@@ -203,8 +210,8 @@ const onPieceTouchEnd = () => {
 }
 .game-view > div {
   border-radius: 10px;
-  box-shadow: 0px 0px 10px #00000033;
-  background: #00000033;
+  box-shadow: 0px 0px 10px #657b9633;
+  background: #5a758d33;
 }
 .jigsaw-container {
   height: 90vmin;
@@ -225,7 +232,7 @@ const onPieceTouchEnd = () => {
   pointer-events: none;
 }
 .jigsaw-containerBorder div {
-  border: 1px dashed rgba(121, 121, 121, 0.5);
+  border: 1px dashed rgba(109, 118, 138, 0.5);
   width: calc(90vmin / 4);
   height: calc(90vmin / 4);
 }
@@ -262,13 +269,14 @@ const onPieceTouchEnd = () => {
   background-size: 90vmin 90vmin;
   background-repeat: no-repeat;
   outline: 1px solid #ffffff33;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
 }
 .piece.transition {
   transition: all 0.5s ease;
 }
 .piece.active {
   cursor: -webkit-grabbing;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
 }
 .piece.out {
   transform: scale(0.8);
@@ -294,7 +302,7 @@ const onPieceTouchEnd = () => {
   .game-view > div.jigsaw-containerBorder {
     left: unset;
   }
-  .count-down{
+  .count-down {
     font-size: 30vmin;
   }
 }

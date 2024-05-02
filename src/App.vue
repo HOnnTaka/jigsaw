@@ -2,7 +2,6 @@
 import { RouterLink, RouterView } from "vue-router";
 import { ref, onMounted } from "vue";
 const blocks = ref([]);
-
 onMounted(() => {
   for (let i = 0; i < 20; i++) {
     blocks.value.push({
@@ -11,6 +10,17 @@ onMounted(() => {
     });
   }
 });
+
+const bgUrl = ref("");
+const hide = ref(true);
+const onImageChange = url => {
+  if (url) {
+    hide.value = false;
+    bgUrl.value = url;
+  } else {
+    hide.value = true;
+  }
+};
 </script>
 
 <template>
@@ -26,38 +36,48 @@ onMounted(() => {
         }"
       ></div>
     </div>
+    <div class="background2" :style="{ backgroundImage: `url(${bgUrl})`, opacity: hide ? 0 : 1 }"></div>
     <div class="app-main">
       <router-view v-slot="{ Component }">
         <transition name="animate" mode="out-in">
-          <component :is="Component" />
+          <component :is="Component" @imageChange="onImageChange" />
         </transition>
       </router-view>
     </div>
     <div class="app-footer">
-      <RouterLink style="flex: 1" to="/">返回首页</RouterLink>
+      <RouterLink style="flex: 1" to="/" replace>返回首页</RouterLink>
       <p style="flex: 1; text-align: center">21级马裕博</p>
-      <a style="flex: 1; text-align: right" href="https://github.com/mcct-code/jigsaw-pc" target="_blank">源</a>
+      <a style="flex: 1; text-align: right" href="https://github.com/HOnnTaka/jigsaw/tree/gh-pages" target="_blank">github</a>
     </div>
   </div>
 </template>
 
 <style scoped>
 .background {
+  height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
   overflow: hidden;
   pointer-events: none;
 }
-
+.background2 {
+  transition: all 0.5s;
+  filter: blur(7px) opacity(0.4);
+  background-size: cover;
+  position: fixed;
+  pointer-events: none;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+}
 .block {
   position: absolute;
   top: 0;
   width: 150px;
   height: 150px;
-  background-color: #e3f1fa55;
+  background-color: #e3f1fa7a;
   animation: dropDown linear infinite;
 }
 
@@ -95,7 +115,7 @@ onMounted(() => {
 
 .animate-enter-from,
 .animate-leave-to {
-  transform: translateY(100%);
+  transform: translateY(100vh);
 }
 
 @media (min-width: 1024px) {

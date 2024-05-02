@@ -1,12 +1,13 @@
 <template>
   <div id="home">
+    <div class="loading" v-if="hide">{{ loadingText }}</div>
     <!-- 关卡容器居中轮播 -->
     <transition-group @mousemove="clearTimer" @mouseleave="startTimer" name="move" tag="div" class="container" :class="{ hide: hide }">
       <div class="item" v-for="(img, index) in images" :key="img" @click="starGame(index)">
-        <img :src="img" alt="" />
+        <img :src="img" alt="" @load="imageLoaded(index)" />
       </div>
     </transition-group>
-    <div class="btnBox" :class="{ hide: hide }">
+    <div class="btnBox" v-if="!hide" :class="{ hide: hide }">
       <div class="lt" @mousemove="clearTimer" @mouseleave="startTimer" @click="prevImg">&lt;</div>
       <div class="rt" @mousemove="clearTimer" @mouseleave="startTimer" @click="nextImg">&gt;</div>
     </div>
@@ -19,17 +20,31 @@
 
 <script setup>
 import { useRouter } from "vue-router";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch, onBeforeUnmount } from "vue";
 
 const router = useRouter();
 const images = ref([]);
-import img1 from "@/assets/images/img1.png";
+import img1 from "@/assets/images/img1.jpg";
 import img5 from "@/assets/images/img5.jpg";
-import img2 from "@/assets/images/img2.png";
+import img2 from "@/assets/images/img2.jpg";
 import img3 from "@/assets/images/img3.jpg";
-import img4 from "@/assets/images/img4.png";
+import img4 from "@/assets/images/img4.jpg";
 const originImages = [img1, img5, img2, img3, img4];
+const loadCount = ref(0);
 const hide = ref(true);
+
+const loadingText = ref("加载默认图片中...0%");
+const LoadingTimer = setInterval(() => {
+  loadingText.value = "加载默认图片中..." + Math.floor((loadCount.value / originImages.length) * 100) + "%";
+  if (!hide.value) clearInterval(LoadingTimer);
+}, 33);
+
+const emit = defineEmits(["imageChange"]);
+watch(images, () => {
+  if (!hide.value) {
+    emit("imageChange", images.value[2]);
+  }
+});
 
 const loadImage = async img => {
   return new Promise((resolve, reject) => {
@@ -41,7 +56,6 @@ const loadImage = async img => {
       const width = imgObj.width;
       const height = imgObj.height;
       const min = Math.min(width, height);
-      const max = Math.max(width, height);
       // 居中裁剪为正方形
       canvas.width = min;
       canvas.height = min;
@@ -68,9 +82,7 @@ const loadImages = async () => {
       const dataURL = await loadImage(img);
       processedImages.push(dataURL);
     } catch (error) {
-      // 处理图片加载失败的情况
       console.error("Failed to load image:", img, error);
-      // 可以选择设置默认图片或其他处理方式
     }
   }
   images.value = processedImages;
@@ -78,19 +90,30 @@ const loadImages = async () => {
 
 onMounted(async () => {
   await loadImages();
+  emit("imageChange", images.value[2]);
 });
+
+const imageLoaded = index => {
+  loadCount.value++;
+  if (loadCount.value === originImages.length) {
+    setTimeout(() => {
+      hide.value = false;
+      startTimer();
+    }, 500);
+  }
+};
 
 const timer = ref(null);
 const clearTimer = () => {
   clearInterval(timer.value);
+  timer.value = null;
 };
 const startTimer = () => {
-  timer.value = setInterval(nextImg, 2000);
+  if (!timer.value) {
+    timer.value = setInterval(nextImg, 2500);
+  }
 };
-setTimeout(() => {
-  hide.value = false;
-  startTimer();
-}, 1000);
+
 const nextImg = () => {
   const newImages = [...images.value];
   newImages.push(newImages.shift());
@@ -113,6 +136,7 @@ const uploadImage = async () => {
   input.type = "file";
   input.accept = "image/*";
   input.onchange = async () => {
+    clearTimer();
     const file = input.files[0];
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -120,18 +144,43 @@ const uploadImage = async () => {
       const originBase64 = reader.result;
       //   对图片进行裁剪
       const dataURL = await loadImage(originBase64);
-      localStorage.setItem("currentImg", dataURL);
-        router.push({ name: "game" });
+      await localStorage.setItem("currentImg", dataURL);
+      // emit("imageChange", dataURL);
+      router.push({ name: "game" });
     };
+  };
+  input.onclick = () => {
+    clearTimer();
+  };
+  input.oncancel = () => {
+    startTimer();
   };
   input.click();
 };
+
+onBeforeUnmount(() => {
+  clearTimer();
+  emit("imageChange", null);
+});
 </script>
 
 <style scoped>
 #home {
   width: 100%;
   height: 100%;
+}
+.loading {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  justify-content: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease-in-out;
+  width: 90%;
+  height: 50vmin;
+  font-size: 10vmin;
 }
 /* 轮播图容器 */
 .container {
@@ -184,7 +233,7 @@ const uploadImage = async () => {
   -webkit-user-drag: none;
 }
 .hint {
-    white-space: nowrap;
+  white-space: nowrap;
   position: absolute;
   top: calc(50% + 35vmin);
   left: 50%;
